@@ -11,17 +11,24 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     receiveTime=datetime.datetime.now()
     message=msg.payload.decode("utf-8")
-    val = float(message)
-    place = msg.topic[-2:-1]
-    if(place == "01"):
-        place= "Labtek V - 7602"
-    print(str(receiveTime) + ": " + place + " " + str(val))
-    post={"timestamp":receiveTime,"location":place,"height":val}
+    isfloatValue=False
+    try:
+        # Convert the string to a float so that it is stored as a number and not a string in the database
+        val = float(message)
+        isfloatValue=True
+    except:
+        isfloatValue=False
+
+    if isfloatValue:
+        print(str(receiveTime) + ": " + msg.topic + " " + str(val))
+        post={"time":receiveTime,"topic":msg.topic,"value":val}
+    else:
+        print(str(receiveTime) + ": " + msg.topic + " " + message)
+        post={"time":receiveTime,"topic":msg.topic,"value":message}
+
     result=db.TrashHeight.insert_one(post)
     #Step 4: Print to the console the ObjectID of the new document
     print('Created {0} '.format(result.inserted_id))
-
-    #Step 5: Mengirim ke data analytics
 
 
 # Set up client for MongoDB
