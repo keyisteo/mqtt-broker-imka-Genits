@@ -13,7 +13,7 @@
 #define BROKER_IP  "192.168.43.224" // The IP of the machine where the broker is running
 #define BROKER_PORT 1883
 
-#define CLIENT_NAME "ESP8266_1" // just a name to identify this client
+#define CLIENT_NAME "TrashCan1" // just a name to identify this client
 WiFiClient wifiClient;
 PubSubClient mqttClient(BROKER_IP,BROKER_PORT,wifiClient);
 
@@ -29,11 +29,11 @@ void setup()
 {
   Serial.begin(9600);
   
-  //mqttClient.setCallback(callback);
+  mqttClient.setCallback(callback);
 
-  //WiFi.begin(WLAN_SSID, WLAN_PASS);
+  WiFi.begin(WLAN_SSID, WLAN_PASS);
 
-  //connectToWiFiAndBroker();
+  connectToWiFiAndBroker();
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 }
@@ -42,14 +42,14 @@ void setup()
 
 void loop() 
 {
-  //if (!mqttClient.connected()) 
-  // {
-  //  connectToWiFiAndBroker();
-  // }
+  if (!mqttClient.connected()) 
+   {
+    connectToWiFiAndBroker();
+   }
 
-  //mqttClient.loop();
-
-  ultrasonic();
+  mqttClient.loop();
+  float value= ultrasonic();
+  mqttClient.publish("TrashCan/1",String(value).c_str());
 }
 
 void callback(char* topic, byte* payload, unsigned int length) 
@@ -95,7 +95,7 @@ void connectToWiFiAndBroker()
   mqttClient.subscribe("AttributeAssign");
 }
 
-void ultrasonic(){
+float ultrasonic(){
   long duration, distance;
   digitalWrite(trigPin, LOW);  // Added this line
   delayMicroseconds(2); // Added this line
@@ -107,7 +107,8 @@ void ultrasonic(){
   distance = (duration/2) / 29.1;
   Serial.print(distance);
   Serial.println(" cm");
-  
-  delay(500);
-  
+  distance= 15-distance;
+  distance= distance*100;
+  delay(2000);
+  return distance;
 }
